@@ -1,0 +1,70 @@
+{% extends 'base.html' %}{% block title %}Smart City — Better civic services{%
+endblock %}{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow">
+      <span class="eyebrow-line"></span> A SMARTER WAY TO IMPROVE YOUR CITY
+    </div>
+    <h1>Every concern.<br /><em>A clear way forward.</em></h1>
+    <p class="hero-text">
+      A transparent place to report civic issues, track progress, and help make
+      your city cleaner, safer, and better connected.
+    </p>
+    <div class="hero-buttons">
+      <a class="btn btn-primary" href="{{ url_for('register') }}"
+        >Get started <span>↗</span></a
+      ><a class="btn btn-quiet" href="{{ url_for('login') }}"
+        >Sign in <span>→</span></a
+      >
+    </div>
+    <div class="trust-row">
+      <div class="trust-avatars"><i>Y</i><i>R</i><i>A</i><i>+</i></div>
+      <span>Built around people, not paperwork.</span>
+    </div>
+  </div>
+  <div class="hero-art">
+    <div class="orbit orbit-one"></div>
+    <div class="orbit orbit-two"></div>
+    <div class="art-center">
+      <div class="checkmark">✓</div>
+      <span>ISSUE RECEIVED</span><strong>We're on it.</strong
+      ><small>Clarity at every step.</small>
+    </div>
+    <div class="float-card card-top">
+      <span class="float-icon purple">↗</span>
+      <div><small>RESOLUTION PREDICTION</small><strong>~ 18 hours</strong></div>
+      <span class="mini-trend">↗</span>
+    </div>
+    <div class="float-card card-bottom">
+      <span class="float-icon green">✓</span>
+      <div><small>STATUS UPDATE</small><strong>Moving forward</strong></div>
+      <span class="pulse-dot"></span>
+    </div>
+    <div class="sparkle sparkle-a">✳</div>
+    <div class="sparkle sparkle-b">✦</div>
+  </div>
+</section>
+<section class="feature-strip">
+  <div>
+    <span class="feature-number">01</span><strong>Be heard</strong>
+    <p>Submit a concern in a few simple steps.</p>
+  </div>
+  <div>
+    <span class="feature-number">02</span><strong>Stay in the loop</strong>
+    <p>Know what's happening and who's on it.</p>
+  </div>
+  <div>
+    <span class="feature-number">03</span><strong>See the way forward</strong>
+    <p>Smart estimates set clearer expectations.</p>
+  </div>
+</section>
+<section class="landing-bottom">
+  <div>
+    <span class="eyebrow">LESS UNCERTAINTY. MORE ACTION.</span>
+    <h2>Good service starts<br />with <em>being listened to.</em></h2>
+  </div>
+  <!----<a class="text-link" href="{{ url_for('register') }}"
+    >Make your first report <span>↗</span></a>
+----->
+</section>
+{% endblock %}

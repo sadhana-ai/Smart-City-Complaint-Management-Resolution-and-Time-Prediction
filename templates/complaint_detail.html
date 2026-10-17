@@ -1,0 +1,260 @@
+```html
+{% extends 'base.html' %}
+
+{% block title %}Complaint #{{ c.complaint_id }} — Smart City{% endblock %}
+{% block crumb %}Complaint details{% endblock %}
+
+{% block content %}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">
+            <span class="eyebrow-line"></span>
+            COMPLAINT REFERENCE #{{ '%04d'|format(c.complaint_id) }}
+        </div>
+
+        <h1>{{ c.title }}</h1>
+
+        <p class="muted">
+            Submitted {{ c.created_at[:16]|replace('T', ' at ') }}
+            · {{ c.category_name }}
+        </p>
+    </div>
+
+    <a class="btn btn-quiet" href="{{ url_for('dashboard') }}">
+        ← Back to overview
+    </a>
+</div>
+
+<div class="detail-grid">
+
+    <section class="panel detail-main">
+
+        <div class="detail-status-row">
+            <span class="status-pill status-{{ c.status|lower|replace(' ', '-') }}">
+                {{ c.status }}
+            </span>
+
+            <span class="priority priority-{{ c.priority|lower }}">
+                <i></i>{{ c.priority }} priority
+            </span>
+        </div>
+
+        <h2>What you reported</h2>
+        <p class="description-text">{{ c.description }}</p>
+
+        <div class="detail-divider"></div>
+
+        <h2>Progress timeline</h2>
+
+        <div class="timeline">
+
+            <div class="timeline-item done">
+                <span class="timeline-dot">✓</span>
+
+                <div>
+                    <b>Complaint submitted</b>
+                    <p>Your report is safely logged in the system.</p>
+                    <small>{{ c.created_at[:16]|replace('T', ' · ') }}</small>
+                </div>
+            </div>
+
+            <div class="timeline-item {{ 'done' if assignment else '' }}">
+                <span class="timeline-dot">
+                    {{ '✓' if assignment else '2' }}
+                </span>
+
+                <div>
+                    <b>
+                        {{ 'Assigned to ' ~ assignment.staff_name
+                           if assignment else 'Awaiting assignment' }}
+                    </b>
+
+                    <p>
+                        {{ 'A team member is responsible for following up.'
+                           if assignment
+                           else 'A staff member will be assigned by the support team.' }}
+                    </p>
+
+                    {% if assignment %}
+                    <small>
+                        {{ assignment.assigned_at[:16]|replace('T', ' · ') }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="timeline-item {{ 'done' if resolution else '' }}">
+                <span class="timeline-dot">
+                    {{ '✓' if resolution else '3' }}
+                </span>
+
+                <div>
+                    <b>
+                        {{ 'Resolution recorded' if resolution else 'Resolution' }}
+                    </b>
+
+                    <p>
+                        {{ resolution.resolution_text if resolution
+                           else 'The outcome will appear here once the issue is resolved.' }}
+                    </p>
+
+                    {% if resolution %}
+                    <small>
+                        {{ resolution.resolved_at[:16]|replace('T', ' · ') }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <aside class="detail-side">
+
+        <section class="prediction-card">
+
+            <div class="prediction-label">
+                <span>✧</span> SMART ESTIMATE
+            </div>
+
+            <div class="prediction-value">
+                {{ prediction.predicted_hours|round|int if prediction else '—' }}
+                <small>hours</small>
+            </div>
+
+            <p>Estimated time to resolution</p>
+
+            <div class="prediction-rule"></div>
+
+            <small class="model-label">
+                {{ prediction.model_name if prediction else 'Awaiting estimate' }}
+            </small>
+
+            {% if session.get('role') in ['admin', 'staff'] %}
+            <button
+                type="button"
+                class="btn btn-light btn-full"
+                id="refresh-prediction"
+                data-url="{{ url_for('refresh_prediction', complaint_id=c.complaint_id) }}">
+                ↻ Refresh estimate
+            </button>
+            {% endif %}
+
+            <div id="prediction-feedback" class="feedback-text">
+                Estimates update with current workload.
+            </div>
+
+        </section>
+
+        <section class="panel detail-meta">
+
+            <h3>Complaint details</h3>
+
+            <div class="meta-row">
+                <span>Reference</span>
+                <b>#{{ '%04d'|format(c.complaint_id) }}</b>
+            </div>
+
+            <div class="meta-row">
+                <span>Category</span>
+                <b>{{ c.category_name }}</b>
+            </div>
+
+            <div class="meta-row">
+                <span>Priority</span>
+                <b>{{ c.priority }}</b>
+            </div>
+
+            <div class="meta-row">
+                <span>Reported by</span>
+                <b>{{ c.reporter }}</b>
+            </div>
+
+            <div class="meta-row">
+                <span>Assigned to</span>
+                <b>{{ assignment.staff_name if assignment else 'Unassigned' }}</b>
+            </div>
+
+        </section>
+    </aside>
+
+</div>
+
+{% if session.get('role') in ['admin', 'staff'] %}
+
+<section class="panel staff-tools">
+
+    <div class="panel-heading">
+        <div>
+            <h2>Staff controls</h2>
+            <p>
+                Update the complaint status or add resolution notes.
+                {% if session.get('role') == 'admin' %}
+                    You can also assign this complaint to a staff member.
+                {% endif %}
+            </p>
+        </div>
+
+        <span class="admin-tag">TEAM ONLY</span>
+    </div>
+
+    <form
+        method="post"
+        action="{{ url_for('update_complaint', complaint_id=c.complaint_id) }}"
+        class="staff-form">
+
+        <label>
+            Status
+
+            <select name="status" required>
+                {% for s in ['Open', 'In Progress', 'On Hold', 'Resolved', 'Closed'] %}
+                <option value="{{ s }}"
+                    {% if c.status == s %}selected{% endif %}>
+                    {{ s }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        {% if session.get('role') == 'admin' %}
+        <label>
+            Assign staff
+
+            <select name="staff_id">
+                <option value="">Keep current assignment</option>
+
+                {% for member in staff %}
+                <option
+                    value="{{ member['user_id'] }}"
+                    {% if assignment and assignment['staff_id'] == member['user_id'] %}
+                        selected
+                    {% endif %}>
+                    {{ member['name'] }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+        {% endif %}
+
+        <label class="resolution-field">
+            Resolution note
+
+            <textarea
+                name="resolution_text"
+                rows="2"
+                placeholder="Add outcome details if marking resolved…">{{ resolution.resolution_text if resolution else '' }}</textarea>
+        </label>
+
+        <button class="btn btn-primary" type="submit">
+            Save changes ↗
+        </button>
+
+    </form>
+
+</section>
+
+{% endif %}
+
+{% endblock %}
+```

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}{% block title %}Overview — Smart City{% endblock %}{%
+block crumb %}Overview{% endblock %}{% block content %}
+<div class="page-heading">
+  <div>
+    <div class="eyebrow">
+      <span class="eyebrow-line"></span> YOUR SERVICE OVERVIEW
+    </div>
+    <h1>
+      {{ 'Good to see you' if session.get('role')=='user' else 'The overview'
+      }}, {{ session.get('name','there').split(' ')[0] }}<span
+        class="heading-period"
+        >.</span
+      >
+    </h1>
+    <p class="muted">
+      {{ 'Here’s where things stand with your concerns.' if
+      session.get('role')=='user' else 'A clear view of the issues that need
+      attention.' }}
+    </p>
+  </div>
+  <a href="{{ url_for('new_complaint') }}" class="btn btn-primary"
+    >＋ New complaint</a
+  >
+</div>
+<div class="stats-grid">
+  <article class="stat-card stat-dark">
+    <div class="stat-top">
+      <span>Total complaints</span><span class="stat-icon">▦</span>
+    </div>
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-foot">
+      <span class="stat-indicator">↗</span> All reports in your workspace
+    </div>
+    <div class="stat-watermark">01</div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-top">
+      <span>Needs attention</span><span class="stat-icon icon-amber">◷</span>
+    </div>
+    <div class="stat-value">{{ pending }}</div>
+    <div class="stat-foot">
+      <span class="status-pill status-open">● Active</span> Not resolved yet
+    </div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-top">
+      <span>Resolved</span><span class="stat-icon icon-green">✓</span>
+    </div>
+    <div class="stat-value">{{ resolved }}</div>
+    <div class="stat-foot">
+      <span class="status-pill status-resolved">● Complete</span> Closed the
+      loop
+    </div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-top">
+      <span>Avg. resolution</span><span class="stat-icon icon-purple">⌁</span>
+    </div>
+    <div class="stat-value">{{ avg }}<small> hrs</small></div>
+    <div class="stat-foot">Based on resolved complaints</div>
+  </article>
+</div>
+<div class="content-grid">
+  <section class="panel complaint-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>
+          {{ 'Your complaints' if session.get('role')=='user' else 'Complaint
+          inbox' }}
+        </h2>
+        <p>Follow every report from submitted to resolved.</p>
+      </div>
+      <span class="count-badge">{{ complaints|length }} records</span>
+    </div>
+    {% if complaints %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Complaint</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Reported</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in complaints %}
+          <tr>
+            <td>
+              <a
+                class="complaint-title"
+                href="{{ url_for('complaint_detail',complaint_id=c.complaint_id) }}"
+                >#{{ '%04d'|format(c.complaint_id) }} · {{ c.title }}</a
+              >{% if session.get('role')!='user' %}<small class="table-sub"
+                >by {{ c.reporter }}</small
+              >{% endif %}
+            </td>
+            <td>{{ c.category_name }}</td>
+            <td>
+              <span class="priority priority-{{ c.priority|lower }}"
+                ><i></i>{{ c.priority }}</span
+              >
+            </td>
+            <td>
+              <span
+                class="status-pill status-{{ c.status|lower|replace(' ','-') }}"
+                >{{ c.status }}</span
+              >
+            </td>
+            <td>{{ c.created_at[:10] }}</td>
+            <td class="complaint-actions">
+              <a
+                class="row-arrow"
+                aria-label="View complaint"
+                title="View complaint"
+                href="{{ url_for('complaint_detail',complaint_id=c.complaint_id) }}"
+                >↗</a
+              >{% if session.get('role') == 'admin' %}
+              <form
+                class="delete-complaint-form"
+                method="post"
+                action="{{ url_for('delete_complaint', complaint_id=c.complaint_id) }}"
+                onsubmit="return confirm('Delete complaint #{{ '%04d'|format(c.complaint_id) }}? This action cannot be undone.');"
+              >
+                <button
+                  type="submit"
+                  class="btn-delete"
+                  title="Delete complaint"
+                  aria-label="Delete complaint #{{ c.complaint_id }}"
+                >
+                  Delete
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">✳</div>
+      <h3>A fresh start.</h3>
+      <p>
+        No complaints here yet. When something needs attention, this is where
+        the journey begins.
+      </p>
+      <a class="btn btn-primary" href="{{ url_for('new_complaint') }}"
+        >Submit your first complaint ↗</a
+      >
+    </div>
+    {% endif %}
+  </section>
+  <aside class="right-column">
+    <section class="panel mini-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>By category</h2>
+          
+          <p>Where reports come from</p>
+        </div>
+        <span class="tiny-spark">◌</span>
+      </div>
+      <div class="category-bars">
+        {% for item in categories %}
+        <div class="bar-row">
+          <div><span>{{ item.name }}</span><b>{{ item.count }}</b></div>
+          <div class="bar-track">
+            <span
+              style="width:{{ (item.count * 100 / (categories|map(attribute='count')|max if categories and (categories|map(attribute='count')|max)>0 else 1))|round }}%"
+            ></span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    <section class="insight-card">
+      <div class="insight-top">
+        <span class="insight-icon">✧</span><span>SMART INSIGHT</span>
+      </div>
+      <h3>Clarity is part of the solution.</h3>
+      <p>
+        Every new complaint receives an estimated resolution time to help set
+        expectations from day one.
+      </p>
+      <a href="{{ url_for('new_complaint') }}"
+        >Raise a concern <span>↗</span></a
+      >
+      <div class="insight-orbit"></div>
+    </section>
+  </aside>
+</div>
+{% endblock %}

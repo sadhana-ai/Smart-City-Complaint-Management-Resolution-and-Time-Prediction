@@ -1,0 +1,124 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Analytics — Smart City{% endblock %}
+{% block crumb %}Analytics{% endblock %}
+
+{% block content %}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">
+            <span class="eyebrow-line"></span>
+            SIGNALS & TRENDS
+        </div>
+
+        <h1>Make the picture <em>clearer.</em></h1>
+
+        <p class="muted">
+            Understand what’s happening, spot patterns, and plan the next move.
+        </p>
+    </div>
+
+    <a href="{{ url_for('reports_csv') }}" class="btn btn-primary">
+        ↓ Export report
+    </a>
+</div>
+
+<!-- Analytics Statistics -->
+<div class="stats-grid analytics-stats">
+
+    <article class="stat-card stat-dark">
+        <div class="stat-top">
+            <span>Total complaints</span>
+            <span class="stat-icon">▦</span>
+        </div>
+
+        <div class="stat-value">{{ total }}</div>
+
+        <div class="stat-foot">
+            All recorded reports
+        </div>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-top">
+            <span>Resolution rate</span>
+            <span class="stat-icon icon-green">✓</span>
+        </div>
+
+        <div class="stat-value">
+            {{ ((resolved * 100 / total) | round | int) if total else 0 }}<small>%</small>
+        </div>
+
+        <div class="stat-foot">
+            {{ resolved }} resolved complaints
+        </div>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-top">
+            <span>Average time</span>
+            <span class="stat-icon icon-purple">⌁</span>
+        </div>
+
+        <div class="stat-value">
+            {{ avg }}<small> hrs</small>
+        </div>
+
+        <div class="stat-foot">
+            For resolved complaints only
+        </div>
+    </article>
+
+</div>
+
+<!-- Analytics Charts -->
+<div class="analytics-grid">
+
+    <!-- Category Mix Chart -->
+    <section class="panel chart-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Category mix</h2>
+                <p>Share by complaint category</p>
+            </div>
+
+            <span class="chart-mark">◌</span>
+        </div>
+
+        <div class="chart-wrap doughnut-wrap">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </section>
+
+    <!-- Current Status Chart -->
+    <section class="panel chart-panel status-chart-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Current status</h2>
+                <p>Where the queue stands right now</p>
+            </div>
+        </div>
+
+        <div class="chart-wrap">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </section>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    window.analyticsData = {
+        categories: {{ cat | map(attribute='name') | list | tojson }},
+        categoryValues: {{ cat | map(attribute='value') | list | tojson }},
+        statuses: {{ status | map(attribute='name') | list | tojson }},
+        statusValues: {{ status | map(attribute='value') | list | tojson }}
+    };
+</script>
+
+{% endblock %}

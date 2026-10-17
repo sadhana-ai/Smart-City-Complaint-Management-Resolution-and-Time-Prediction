@@ -1,0 +1,325 @@
+
+{% extends "base.html" %}
+
+{% block title %}User Management — Smart City{% endblock %}
+{% block crumb %}User Management{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <p class="eyebrow">ADMINISTRATION</p>
+    <h1>User Management</h1>
+    <p>Search accounts, update user details and roles, and manage account access.</p>
+</section>
+
+<section class="panel users-panel">
+    <div class="panel-header">
+        <div>
+            <h2>Registered accounts</h2>
+            <p>Changes to roles affect what each account can access.</p>
+        </div>
+
+        <a href="{{ url_for('create_staff') }}" class="btn btn-primary">
+            + Create Staff Account
+        </a>
+
+        <span class="account-count">
+            {{ users|length }} shown / {{ total_accounts }} total
+        </span>
+    </div>
+
+    <form class="user-search" method="GET"
+          action="{{ url_for('users_page') }}">
+        <input
+            type="search"
+            name="q"
+            value="{{ search }}"
+            placeholder="Search by name, email, role, or user ID"
+            aria-label="Search user accounts"
+        >
+
+        <button type="submit" class="btn btn-primary">Search</button>
+
+        {% if search %}
+        <a class="btn btn-secondary"
+           href="{{ url_for('users_page') }}">Clear</a>
+        {% endif %}
+    </form>
+
+    {% if users %}
+    <div class="table-responsive">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Account details</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Account actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>#{{ user['user_id'] }}</td>
+
+                    <td>
+                        <form
+                            id="edit-user-{{ user['user_id'] }}"
+                            method="POST"
+                            action="{{ url_for('update_user', user_id=user['user_id']) }}"
+                            class="edit-user-form"
+                        >
+                            <input
+                                name="name"
+                                value="{{ user['name'] }}"
+                                required
+                                maxlength="120"
+                                aria-label="Name for user {{ user['user_id'] }}"
+                            >
+
+                            <input
+                                type="email"
+                                name="email"
+                                value="{{ user['email'] }}"
+                                required
+                                maxlength="254"
+                                aria-label="Email for user {{ user['user_id'] }}"
+                            >
+                        </form>
+                    </td>
+
+                    <td>
+                        <select
+                            name="role"
+                            form="edit-user-{{ user['user_id'] }}"
+                            aria-label="Role for user {{ user['user_id'] }}"
+                        >
+                            <option value="user"
+                                {% if user['role'] == 'user' %}selected{% endif %}>
+                                User
+                            </option>
+                            <option value="staff"
+                                {% if user['role'] == 'staff' %}selected{% endif %}>
+                                Staff
+                            </option>
+                            <option value="admin"
+                                {% if user['role'] == 'admin' %}selected{% endif %}>
+                                Admin
+                            </option>
+                        </select>
+
+                        <button
+                            type="submit"
+                            form="edit-user-{{ user['user_id'] }}"
+                            class="btn btn-small btn-primary save-button"
+                        >Save</button>
+                    </td>
+
+                    <td>
+                        {% if user['is_active'] %}
+                        <span class="status-badge status-active">Active</span>
+                        {% else %}
+                        <span class="status-badge status-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ user['created_at'][:10] if user['created_at'] else '—' }}
+                    </td>
+
+                    <td class="action-cell">
+                        {% if user['user_id'] != session.get('user_id') %}
+                        <form
+                            method="POST"
+                            action="{{ url_for('toggle_user', user_id=user['user_id']) }}"
+                            onsubmit="return confirm('Are you sure you want to change this account status?');"
+                        >
+                            <button type="submit" class="btn btn-small btn-secondary">
+                                {% if user['is_active'] %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('delete_user', user_id=user['user_id']) }}"
+                            onsubmit="return confirm('Delete this account permanently? Accounts linked to complaint history cannot be deleted.');"
+                        >
+                            <button type="submit" class="btn btn-small btn-danger">
+                                Delete
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="self-note">Current account</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h3>No accounts found</h3>
+        <p>
+            {% if search %}
+            Try a different search term.
+            {% else %}
+            Registered users and support staff will appear here.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</section>
+
+<style>
+.users-panel { overflow: hidden; }
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #edf0ed;
+    flex-wrap: wrap;
+}
+
+.panel-header h2 { margin: 0 0 6px; }
+
+.panel-header p {
+    margin: 0;
+    color: #83918a;
+    font-size: 13px;
+}
+
+.account-count {
+    background: #edf4ef;
+    color: #356858;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.user-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #edf0ed;
+}
+
+.user-search input {
+    flex: 1;
+    min-width: 180px;
+    padding: 11px 13px;
+    border: 1px solid #dfe7e1;
+    border-radius: 9px;
+    font: inherit;
+}
+
+.table-responsive { width: 100%; overflow-x: auto; }
+
+.users-table {
+    width: 100%;
+    min-width: 1100px;
+    border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid #edf0ed;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.users-table th {
+    background: #fafbf9;
+    color: #83918a;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.users-table tbody tr:hover { background: #f8faf8; }
+
+.edit-user-form {
+    display: grid;
+    gap: 8px;
+    min-width: 240px;
+}
+
+.edit-user-form input,
+.users-table select {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px 9px;
+    border: 1px solid #dfe7e1;
+    border-radius: 7px;
+    background: #fff;
+    font: inherit;
+    font-size: 12px;
+}
+
+.users-table select { margin-bottom: 8px; }
+
+.save-button { display: block; }
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-active { background: #e8f3ed; color: #39745d; }
+.status-inactive { background: #fcebea; color: #a94442; }
+
+.action-cell { min-width: 170px; white-space: nowrap; }
+.action-cell form { display: inline-block; margin: 3px; }
+
+.btn-small {
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 7px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.btn-secondary { background: #edf2ee; color: #426557; }
+.btn-danger { background: #fcebea; color: #a94442; }
+
+.self-note { color: #83918a; font-size: 11px; }
+
+.empty-state { padding: 48px 24px; text-align: center; }
+.empty-state h3 { margin-bottom: 8px; color: #30443b; }
+.empty-state p { color: #83918a; font-size: 13px; }
+
+@media (max-width: 700px) {
+    .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .user-search {
+        padding: 14px;
+        flex-wrap: wrap;
+    }
+
+    .user-search input { flex-basis: 100%; }
+    .users-table th, .users-table td { padding: 12px; }
+}
+</style>
+{% endblock %}

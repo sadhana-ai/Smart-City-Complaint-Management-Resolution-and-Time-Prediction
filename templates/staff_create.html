@@ -1,0 +1,37 @@
+
+{% extends "base.html" %}
+
+{% block title %}Create Staff Account — Smart City{% endblock %}
+{% block crumb %}Create Staff Account{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <p class="eyebrow">ADMINISTRATION</p>
+    <h1>Create staff account</h1>
+    <p>Add a support team member to manage complaints.</p>
+</section>
+
+<section class="panel" style="max-width: 680px; padding: 28px;">
+    <form method="POST" action="{{ url_for('create_staff') }}">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text"
+               placeholder="e.g. Rahul Sharma"
+               maxlength="100" required>
+
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email"
+               placeholder="staff@example.com"
+               maxlength="254" required>
+
+        <label for="password">Temporary password</label>
+        <input id="password" name="password" type="password"
+               minlength="8" autocomplete="new-password"
+               placeholder="At least 8 characters" required>
+
+        <button type="submit" class="btn btn-primary"
+                style="margin-top: 24px;">
+            Create staff account
+        </button>
+    </form>
+</section>
+{% endblock %}

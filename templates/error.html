@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block title %}{{ code }} — Smart City{% endblock %}{% block content %}<div class="empty-state error-state"><div class="empty-icon">{{ code }}</div><h1>That page took a wrong turn.</h1><p>{{ message }}</p><a class="btn btn-primary" href="{{ url_for('dashboard') if session.get('user_id') else url_for('index') }}">Back to safety ↗</a></div>{% endblock %}

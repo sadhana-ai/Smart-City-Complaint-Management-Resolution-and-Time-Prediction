@@ -1,0 +1,206 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}Smart City — Civic Services{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <a class="brand" href="{{ url_for('index') }}">
+            <span class="brand-mark">S.</span>
+            <span>
+                smart city<span class="brand-dot">.</span>
+                <small>CIVIC SERVICES</small>
+            </span>
+        </a>
+
+        <div class="side-label">WORKSPACE</div>
+
+        <nav>
+            <!-- Overview: all authenticated roles -->
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+            >
+                <span>▦</span> Overview
+            </a>
+
+            <!-- New Complaint: regular users and admins only -->
+            {% if session.get('role') in ['user', 'admin'] %}
+            <a
+                href="{{ url_for('new_complaint') }}"
+                class="nav-link {% if request.endpoint == 'new_complaint' %}active{% endif %}"
+            >
+                <span>＋</span> New complaint
+            </a>
+            {% endif %}
+
+            <!-- Analytics: Admin and Staff -->
+            {% if session.get('role') in ['admin', 'staff'] %}
+            <a
+                href="{{ url_for('analytics') }}"
+                class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}"
+            >
+                <span>⌁</span> Analytics
+            </a>
+            {% endif %}
+
+            <!-- Categories and User Management: Admin only -->
+            {% if session.get('role') == 'admin' %}
+
+            <a
+                href="{{ url_for('categories_page') }}"
+                class="nav-link {% if request.endpoint == 'categories_page' %}active{% endif %}"
+            >
+                <span>▤</span> Categories
+            </a>
+
+            <a
+                href="{{ url_for('users_page') }}"
+                class="nav-link {% if request.endpoint in ['users_page', 'create_staff', 'update_user', 'toggle_user', 'delete_user'] %}active{% endif %}"
+            >
+                <span>♙</span> User Management
+            </a>
+
+            {% endif %}
+        </nav>
+
+        <!-- Sidebar bottom -->
+        <div class="sidebar-bottom">
+
+            <!-- Raise a concern: regular users and admins only -->
+            {% if session.get('role') in ['user', 'admin'] %}
+            <div class="help-card">
+                <div class="help-icon">✳</div>
+                <strong>Need a hand?</strong>
+                <p>Every concern deserves a clear answer.</p>
+
+                <a href="{{ url_for('new_complaint') }}">
+                    Raise a concern <span>↗</span>
+                </a>
+            </div>
+            {% elif session.get('role') == 'staff' %}
+            <div class="help-card">
+                <div class="help-icon">✳</div>
+                <strong>Support workspace</strong>
+                <p>Review complaints, update their status, and help resolve issues.</p>
+
+                <a href="{{ url_for('dashboard') }}">
+                    View complaints <span>↗</span>
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- User profile -->
+            <div class="profile-row">
+
+                <div class="avatar">
+                    {{ (session.get('name') or 'G')[0]|upper }}
+                </div>
+
+                <div class="profile-copy">
+                    <strong>{{ session.get('name', 'Guest') }}</strong>
+                    <small>
+                        {{ (session.get('role', 'visitor')|replace('_', ' '))|title }}
+                    </small>
+                </div>
+
+                {% if session.get('user_id') %}
+                <a
+                    class="logout"
+                    href="{{ url_for('logout') }}"
+                    title="Sign out"
+                >↗</a>
+                {% endif %}
+
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-area">
+
+        <header class="topbar">
+
+            <div class="mobile-brand">
+                smart city<span>.</span>
+            </div>
+
+            <div class="crumb">
+                Workspace
+                <span>/</span>
+                <b>{% block crumb %}Overview{% endblock %}</b>
+            </div>
+
+            <div class="top-actions">
+                <span class="live-dot"></span>
+                <span class="top-status">Service desk online</span>
+
+                <div class="top-avatar">
+                    {{ (session.get('name') or 'G')[0]|upper }}
+                </div>
+            </div>
+
+        </header>
+
+        <!-- Page content and flash messages -->
+        <section class="page-content">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-stack">
+                    {% for category, message in messages %}
+                    <div class="flash {{ category }}">
+                        {{ message }}
+                        <button
+                            type="button"
+                            onclick="this.parentElement.remove()"
+                            aria-label="Dismiss notification"
+                        >×</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            Made for better outcomes
+            <span>·</span>
+            {{ current_year }} Resolve Desk
+        </footer>
+
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>
